@@ -1,0 +1,20 @@
+[project]
+name = "shot-supervisor"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "shot-core[db]",
+    "dbos>=2.31",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "anthropic>=1.2",
+    "livekit-api>=1.2",
+    "httpx>=0.27",
+]
+
+[tool.uv.sources]
+shot-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

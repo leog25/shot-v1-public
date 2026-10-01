@@ -1,0 +1,62 @@
+[project]
+name = "shot"
+version = "0.1.0"
+description = "A phone number you can call that delegates work and calls you back."
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "shot-core",
+    "shot-supervisor",
+    "shot-voice",
+    "shot-hooks",
+    # ops/browser_login.py reads the saved browser profile back over CDP
+    "websockets>=13",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+shot-core = { workspace = true }
+shot-supervisor = { workspace = true }
+shot-voice = { workspace = true }
+shot-hooks = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.112",
+    "time-machine>=2.15",
+    "respx>=0.21",
+    "ruff>=0.7",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# `ops` is a repo-root package run as `python -m ops.status`, not a workspace
+# member, so it is not installed and pytest does not otherwise find it. The
+# shot_* packages come from the uv workspace and are unaffected.
+pythonpath = ["."]
+markers = [
+    "contract: hits real APIs; cheap but not offline",
+]
+filterwarnings = [
+    # surfaces the deprecated-kwarg traps from C1/C2 instead of hiding them
+    "error::DeprecationWarning:livekit.*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.ruff.lint.isort]
+# Without this every `from shot_* import` reads as third-party and every file
+# in the repo raises I001 -- noise that hid two genuinely unused imports in
+# worker.py behind 20 false ones.
+known-first-party = ["shot_core", "shot_supervisor", "shot_voice", "shot_hooks"]
+# tests/support holds the offline doubles; it is ours, not a vendor package.
+known-local-folder = ["support"]

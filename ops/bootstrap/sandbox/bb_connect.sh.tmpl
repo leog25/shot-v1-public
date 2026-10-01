@@ -1,0 +1,32 @@
+#!/bin/sh
+# Print a CDP URL for a Browserbase browser running on the owner's SIGNED-IN profile.
+#
+# `browse --remote` makes its own session and cannot attach a Context -- v0.9.6
+# only ever sets browserSettings.verified, and it reads no context env var. So
+# the session is made here, with the context, and browse attaches over --cdp.
+#
+# persist:false on purpose: the profile is seeded by hand (ops/browser_login.py)
+# and worker sessions must not be able to write back over a login.
+#
+# The URL is cached for the life of the sandbox so repeated calls reuse one
+# browser instead of burning a new Browserbase session per command.
+set -e
+CACHE=/tmp/.bb_cdp_url
+[ -s "$CACHE" ] && { cat "$CACHE"; exit 0; }
+
+RESP=$(curl -sS -X POST https://api.browserbase.com/v1/sessions \
+  -H "X-BB-API-Key: $BROWSERBASE_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"projectId":"__PROJECT_ID__",
+       "browserSettings":{"context":{"id":"__CONTEXT_ID__","persist":false}},
+       "keepAlive":true}')
+
+URL=$(printf '%s' "$RESP" | python3 -c 'import sys,json
+d=json.load(sys.stdin)
+u=d.get("connectUrl")
+if not u:
+    sys.exit("browserbase session create failed: %s" % json.dumps(d)[:300])
+print(u)')
+
+printf '%s' "$URL" > "$CACHE"
+printf '%s' "$URL"

@@ -1,0 +1,27 @@
+# secrets
+.env
+.env.local
+# Claude Code: this machine's settings (the project pin, a gcloud deny rule)
+# and its working notes. Local only -- neither is part of the published repo.
+.claude/
+CLAUDE.md
+*.pem
+*-service-account.json
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# node
+node_modules/
+dist/
+.turbo/
+
+# local state
+*.db
+*.sqlite3
+.DS_Store
+recordings/
